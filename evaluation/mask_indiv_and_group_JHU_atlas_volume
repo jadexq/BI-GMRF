@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+###############################################################################
+#
+#  This program uses the JHU_WM_labels and counts the number of pixels
+#  	of each region in the first commandline argument and outputs the
+#  	data into a file specified by the second
+#
+#  created in PERL 15aug2013 
+#
+###############################################################################
+$SCRIPT_VERSION = "1.0.0";
+$ATLAS_DIR = "./JHU_WM_labels";
+
+# Help option to give usage
+if(($ARGV[0] =~ /-h/) || ($ARGV[0] =~ /help/) || ($ARGV[0] =~ /HELP/))
+  {
+   print "Usage: mask_indiv_and_group_JHU_atlas_volume Input_Image Output_File\n\n";
+   print "Apply Individual then Group Tract Labels to the specified Input_Image and report the number of pixels of each tract in the Output_File\n";
+   print "Version : $SCRIPT_VERSION\n\n";
+   exit(0);
+  }
+
+print "Using Version $SCRIPT_VERSION\n";
+
+$ver = $ENV{FSLDIR};   # Get path to version of FSL used
+if ($ver !~ /fsl/)
+  {
+   die "Must set FSL Environment Variables to Run!!\n";
+  }
+
+if(-e $ARGV[1])
+  {
+   die "Output File already exists!!!\nPlease Delete to Overwrite!\n";
+  }
+
+$outname = ">> " . $ARGV[1] . "\n";
+open(OPFile,$outname);
+
+$line = `fslstats $ARGV[0] -V`;
+print OPFile "Total $line";
+
+@indiv_tracks = ("GenuCC","BodyCC","SpleniumCC","Corticospinal_R","Corticospinal_L","MedLemniscus_R","MedLemniscus_L","MidCerebPed","PontCrossTract","InfCerebPed_R","InfCerebPed_L","SupCerebPed_R","SupCerebPed_L","CerPed_R","CerPed_L","ALIC_R","ALIC_L","PLIC_R","PLIC_L","RLIC_R","RLIC_L","AntCorRad_R","AntCorRad_L","SupCorRad_R","SupCorRad_L","PostCorRad_R","PostCorRad_L","PostThalRad_R","PostThalRad_L","SagStratum_R","SagStratum_L","ExtCap_R","ExtCap_L","CingulumGyrus_R","CingulumGyrus_L","CingulumHippo_R","CingulumHippo_L","Fornix_R","Fornix_L","Fornix","SupLongFasciculus_R","SupLongFasciculus_L","SupFronto-occipitalFasciculus_R","SupFronto-occipitalFasciculus_L","UncinateFasciculus_R","UncinateFasciculus_L","Tapetum_R","Tapetum_L");
+
+foreach $track (@indiv_tracks)
+      {
+       $line = `fslstats $ARGV[0] -k $ATLAS_DIR/Indiv_Labels/$track -V`;
+       print OPFile "$track $line";
+      }
+
+@grp_tracks = ( "CorpusCallosum","CorticospinalTract","MedialLemniscus","CerebellarPeduncle","CerebralPeduncle","InternalCapsule","CoronaRadiata","PosteriorThalamicRadiation","SagittalStratum","ExternalCapsule","Cingulum","Fornix","SupLongFasciculus","SupFrontoOccipFasciculus","UncinateFasciculus","Tapetum");
+
+foreach $track (@grp_tracks)
+      {
+       $line = `fslstats $ARGV[0] -k $ATLAS_DIR/Group_Labels/$track -V`;
+       print OPFile "$track $line";
+      }
+
+close(OPFile);
